@@ -28,13 +28,13 @@ Usage
 
 1. Update ``pelicanconf.py``:
 
-   1. Add ``pelican-autostatic`` to ``PLUGINS``.
+   1. Add ``autostatic`` to ``PLUGINS``.
       
       You should add it before any metadata-affecting plugins.
 
       .. code-block:: python
       
-          PLUGINS = ['pelican-autostatic', ...]
+          PLUGINS = ['autostatic', ...]
 
 2. Reference static content in your Markdown/rST metadata/text by using the
    ``{static}`` substitution: ::
