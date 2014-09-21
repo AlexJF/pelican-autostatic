@@ -47,7 +47,12 @@ Usage
 
    Example (in markdown): ::
 
-       [Markdown example file]({static file/example.zip})
+       [Markdown example file]({static file/example.zip key1=val1 key2="val 2" ...})
+
+   You can also use ``|`` instead of spaces if you wish (for use with Markdown 
+   inline image syntax which doesn't accept spaces for the url for instance): ::
+
+       ![Markdown example image]({static|file/example.png|key1=val1} "Image title")
 
 3. An index of these references will be automatically built and those files
    will be copied to the output folder preserving the path structure:
@@ -93,6 +98,33 @@ Third-party options
   <https://github.com/AlexJF/pelican-advthumbnailer>`_ adds a ``thumb``
   option that changes the url of the static image reference so that a thumbnail
   of that image is generated and linked and not the image itself.
+
+
+Configuration
+=============
+You can set the following options in your ``pelicanconf.py``:
+
+- ``AUTOSTATIC_REFERENCE_PATTERN`` (String) - Change the regex of the static reference 
+  pattern. It needs to have the following groups:
+
+  - ``path`` - This should have the path used in the reference.
+  - ``extra`` - This should have the ``key1=val1 key2="val 2" ...`` string.
+
+  For reference, the default pattern is: ::
+
+      r"""{static(?:\s+|\|)((?:"|')?)(?P<path>[^\1=]+?)\1(?:(?:\s+|\|)(?P<extra>.*))?\s*}"""
+
+- ``AUTOSTATIC_USE_PELICANLIKE_REF`` (Boolean) - Activate the usage of a different format of
+  the static reference that is similar to `Pelican's {filename} syntax
+  <http://docs.getpelican.com/en/3.4.0/content.html#linking-to-internal-content>`_: ::
+
+      ![Markdown example image]({static|key1=val1}images/example.png "Image title")
+
+  *NOTE:* I haven't actually benchmarked this but this mechanism (the same used
+  by Pelican with ``{filename}``) should be slightly slower than the default one
+  used in this plugin. This is because the ``{filename}`` mechanism does
+  matching over all html tags which will surely result in a lot of backtracks
+  on a HTML document.
 
 
 Extending

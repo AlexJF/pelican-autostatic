@@ -8,7 +8,7 @@ setup(
 
     # Basic package information:
     name = 'pelican-autostatic',
-    version = '0.2.0',
+    version = '0.2.1',
     py_modules = ('autostatic',),
 
     # Packaging options:
@@ -23,7 +23,7 @@ setup(
     author_email = 'alexandrejorgefonseca@gmail.com',
     license = 'Apache',
     url = 'https://github.com/AlexJF/pelican-autostatic',
-    download_url = 'https://github.com/AlexJF/pelican-autostatic/archive/v0.2.0.zip',
+    download_url = 'https://github.com/AlexJF/pelican-autostatic/archive/v0.2.1.zip',
     keywords = 'pelican blog static generic automatic',
     description = ('A generator for Pelican allowing flexible referencing '
             'of static content'),

@@ -23,72 +23,25 @@ detected_autostatic_paths = {}
 
 autostatic_path_found = signal("autostatic_path_found")
 
-CUSTOM_STATIC_REF_PATTERN_KEY = "STATIC_REFERENCE_PATTERN"
-DEFAULT_STATIC_REF_PATTERN = r"""{static(?:\s+|-)((?:"|')?)(?P<path>[^\1=]+?)\1(?:\s+(?P<extra>.*))?\s*}"""
+CUSTOM_STATIC_REF_PATTERN_KEY = "AUTOSTATIC_REFERENCE_PATTERN"
+USE_PELICAN_LIKE_REF_KEY = "AUTOSTATIC_USE_PELICANLIKE_REF"
+
+# Works everywhere
+DEFAULT_STATIC_REF_PATTERN = r"""{static(?:\s+|\|)((?:"|')?)(?P<path>[^\1=]+?)\1(?:(?:\s+|\|)(?P<extra>.*))?\s*}"""
+
+# Works just in url-value attributes
+PELICAN_LIKE_REF_TAG = r"""{static(?:(?:\s+|\|)(?P<extra>.*))?}"""
+PELICAN_LIKE_HREF_PATTERN = r"""
+    (?P<markup><\s*[^\>]*  # match tag with all url-value attributes
+        (?:href|src|poster|data|cite|formaction|action)\s*=)
+
+    (?P<quote>["\'])      # require value to be quoted
+    (?P<ref>{0}(?P<path>.*?))  # the url value
+    \2""".format(PELICAN_LIKE_REF_TAG)
+
 
 
 def parse_static_references(instance, text):
-    if text is None:
-        return text
-
-    if isinstance(text, six.string_types):
-        settings = instance.settings
-
-        static_ref_re_pattern = DEFAULT_STATIC_REF_PATTERN
-
-        if settings and CUSTOM_STATIC_REF_PATTERN_KEY in settings:
-            static_ref_re_pattern = settings[CUSTOM_STATIC_REF_PATTERN_KEY]
-
-        return re.sub(static_ref_re_pattern, get_static_path(instance), text)
-    elif isinstance(text, list):
-        return [parse_static_references(instance, item) for item in text]
-    else:
-        return text
-
-
-class StaticPath(object):
-    def __init__(self, source, destination, url, extra):
-        self._source = source
-        self._original_destination = destination
-        self._destination = destination
-        self._original_url = url
-        self._url = url
-        self._extra = extra
-
-    @property
-    def source(self):
-        return self._source
-
-    @property
-    def original_destination(self):
-        return self._original_destination
-
-    @property
-    def destination(self):
-        return self._destination
-
-    @destination.setter
-    def destination(self, value):
-        self._destination = value
-
-    @property
-    def original_url(self):
-        return self._original_url
-
-    @property
-    def url(self):
-        return self._url
-
-    @url.setter
-    def url(self, value):
-        self._url = value
-
-    @property
-    def extra(self):
-        return self._extra
-
-
-def get_static_path(instance):
     def _get_static_path(match_obj):
         path = match_obj.group("path")
         extra = match_obj.group("extra")
@@ -99,7 +52,7 @@ def get_static_path(instance):
         using_relative_urls = instance._context.get("RELATIVE_URLS")
 
         if extra:
-            for match in re.finditer(r'(\w+)="?((?:(?<!")[^\s]+|(?<=")(?:\\.|[^"\\])*(?=")))"?', extra):
+            for match in re.finditer(r'(\w+)="?((?:(?<!")[^\s|]+|(?<=")(?:\\.|[^"\\])*(?=")))"?', extra):
                 extra_dict[match.group(1)] = match.group(2)
 
         if path.startswith('/'):
@@ -157,7 +110,77 @@ def get_static_path(instance):
 
         return static_path_obj.url
 
-    return _get_static_path
+
+    def _parse_pelican_like_reference(m):
+        return ''.join((m.group('markup'), m.group('quote'),
+                        _get_static_path(m),
+                        m.group('quote')))
+
+
+    if text is None:
+        return text
+
+    if isinstance(text, six.string_types):
+        settings = instance.settings
+
+        static_ref_re_pattern = DEFAULT_STATIC_REF_PATTERN
+
+        if settings and CUSTOM_STATIC_REF_PATTERN_KEY in settings:
+            static_ref_re_pattern = settings[CUSTOM_STATIC_REF_PATTERN_KEY]
+
+        text = re.sub(static_ref_re_pattern, _get_static_path, text)
+
+        if settings and settings.get(USE_PELICAN_LIKE_REF_KEY, False):
+            text = re.sub(PELICAN_LIKE_HREF_PATTERN,
+                          _parse_pelican_like_reference, text, flags=re.X)
+
+        return text
+    elif isinstance(text, list):
+        return [parse_static_references(instance, item) for item in text]
+    else:
+        return text
+
+
+class StaticPath(object):
+    def __init__(self, source, destination, url, extra):
+        self._source = source
+        self._original_destination = destination
+        self._destination = destination
+        self._original_url = url
+        self._url = url
+        self._extra = extra
+
+    @property
+    def source(self):
+        return self._source
+
+    @property
+    def original_destination(self):
+        return self._original_destination
+
+    @property
+    def destination(self):
+        return self._destination
+
+    @destination.setter
+    def destination(self, value):
+        self._destination = value
+
+    @property
+    def original_url(self):
+        return self._original_url
+
+    @property
+    def url(self):
+        return self._url
+
+    @url.setter
+    def url(self, value):
+        self._url = value
+
+    @property
+    def extra(self):
+        return self._extra
 
 
 class AutoStaticGenerator(generators.Generator):
