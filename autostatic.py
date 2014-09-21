@@ -14,7 +14,7 @@ from blinker import signal
 
 from pelican import signals, generators
 from pelican.contents import Static
-from pelican.utils import mkdir_p
+from pelican.utils import mkdir_p, get_relative_path
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ detected_autostatic_paths = {}
 autostatic_path_found = signal("autostatic_path_found")
 
 CUSTOM_STATIC_REF_PATTERN_KEY = "STATIC_REFERENCE_PATTERN"
-DEFAULT_STATIC_REF_PATTERN = r"""{static\s+((?:"|')?)(?P<path>[^\1=]+?)\1(?:\s+(?P<extra>.*))?\s*}"""
+DEFAULT_STATIC_REF_PATTERN = r"""{static(?:\s+|-)((?:"|')?)(?P<path>[^\1=]+?)\1(?:\s+(?P<extra>.*))?\s*}"""
 
 
 def parse_static_references(instance, text):
@@ -94,6 +94,9 @@ def get_static_path(instance):
         extra = match_obj.group("extra")
 
         extra_dict = {}
+        instance_destination_dir = os.path.dirname(instance.save_as)
+        relative_path = False
+        using_relative_urls = instance._context.get("RELATIVE_URLS")
 
         if extra:
             for match in re.finditer(r'(\w+)="?((?:(?<!")[^\s]+|(?<=")(?:\\.|[^"\\])*(?=")))"?', extra):
@@ -102,21 +105,32 @@ def get_static_path(instance):
         if path.startswith('/'):
             source_path = path[1:]
             destination_path = source_path
+            relative_path = False
         else:
             source_path = instance.get_relative_source_path(
                 os.path.join(instance.relative_dir, path))
-            destination_path = os.path.join(os.path.dirname(instance.save_as), path)
+            destination_path = os.path.join(instance_destination_dir, path)
+            relative_path = True
 
         if "output" in extra_dict:
             output_override = extra_dict["output"]
 
             if output_override.startswith('/'):
                 destination_path = output_override[1:]
+                relative_path = False
             else:
-                destination_path = os.path.join(os.path.dirname(instance.save_as), output_override)
+                destination_path = os.path.join(instance_destination_dir, output_override)
+                relative_path = True
 
-        siteurl = instance._context.get("localsiteurl", "")
-        url = siteurl + "/" + destination_path
+        if using_relative_urls:
+            siteurl = get_relative_path(instance.save_as)
+        else:
+            siteurl = instance._context.get("localsiteurl", "")
+
+        if relative_path and using_relative_urls:
+            url = os.path.relpath(destination_path, instance_destination_dir)
+        else:
+            url = siteurl + "/" + destination_path
 
         if "url" in extra_dict:
             url_override = extra_dict["url"]
@@ -124,7 +138,10 @@ def get_static_path(instance):
             if url_override.startswith('/'):
                 url = siteurl + url_override
             else:
-                url = siteurl + "/" + os.path.join(os.path.dirname(instance.save_as), url_override)
+                url = url_override
+
+                if not using_relative_urls:
+                    url = siteurl + "/" + os.path.dirname(instance.save_as) + "/" + url
 
         url = url.replace('\\', '/')  # for Windows paths.
 
