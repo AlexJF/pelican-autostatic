@@ -27,7 +27,7 @@ CUSTOM_STATIC_REF_PATTERN_KEY = "AUTOSTATIC_REFERENCE_PATTERN"
 USE_PELICAN_LIKE_REF_KEY = "AUTOSTATIC_USE_PELICANLIKE_REF"
 
 # Works everywhere
-DEFAULT_STATIC_REF_PATTERN = r"""{static(?:\s+|\|)((?:"|')?)(?P<path>[^\1=]+?)\1(?:(?:\s+|\|)(?P<extra>.*))?\s*}"""
+DEFAULT_STATIC_REF_PATTERN = r"""{static(?:\s+|\|)((?:"|')?)(?P<path>[^(?P=1)=]+?)\1(?:(?:\s+|\|)(?P<extra>.*))?\s*}"""
 
 # Works just in url-value attributes
 PELICAN_LIKE_REF_TAG = r"""{static(?:(?:\s+|\|)(?P<extra>.*))?}"""
