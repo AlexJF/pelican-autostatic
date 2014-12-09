@@ -1,3 +1,5 @@
+* 09/12/2014 - 0.2.2
+	* Fix autostatic inside markdown links/images when quotes are html-escaped.
 * 21/09/2014 - 0.2.1
 	* Change the syntax for the no-space {static...} tag.
 	* Add support for a reference syntax similar to the {filename} reference which exists in Pelican.

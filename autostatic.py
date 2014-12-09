@@ -8,6 +8,13 @@ import os
 import re
 import shutil
 
+# For html escaping/unescaping
+import HTMLParser
+try:
+    from html import escape as html_escape  # py3
+except ImportError:
+    from cgi import escape as html_escape # py2
+
 import six
 
 from blinker import signal
@@ -17,6 +24,7 @@ from pelican.contents import Static
 from pelican.utils import mkdir_p, get_relative_path
 
 logger = logging.getLogger(__name__)
+html_parser = HTMLParser.HTMLParser()
 
 autostatic_generator = None
 detected_autostatic_paths = {}
@@ -27,7 +35,7 @@ CUSTOM_STATIC_REF_PATTERN_KEY = "AUTOSTATIC_REFERENCE_PATTERN"
 USE_PELICAN_LIKE_REF_KEY = "AUTOSTATIC_USE_PELICANLIKE_REF"
 
 # Works everywhere
-DEFAULT_STATIC_REF_PATTERN = r"""{static(?:\s+|\|)((?:"|')?)(?P<path>[^\1=]+?)\1(?:(?:\s+|\|)(?P<extra>.*))?\s*}"""
+DEFAULT_STATIC_REF_PATTERN = r"""{static(?:\s+|\|)((?:"|'|&quot;|&apos;|&#34;|&#39;)?)(?P<path>.+?)\1(?:(?:\s+|\|)(?P<extra>.*))?\s*}"""
 
 # Works just in url-value attributes
 PELICAN_LIKE_REF_TAG = r"""{static(?:(?:\s+|\|)(?P<extra>.*))?}"""
@@ -40,12 +48,17 @@ PELICAN_LIKE_HREF_PATTERN = r"""
     \2""".format(PELICAN_LIKE_REF_TAG)
 
 
+def html_unescape(text):
+    if text is None:
+        return text
+
+    return html_parser.unescape(text)
+
 
 def parse_static_references(instance, text):
     def _get_static_path(match_obj):
         path = match_obj.group("path")
-        extra = match_obj.group("extra")
-
+        extra = html_unescape(match_obj.group("extra"))
         extra_dict = {}
         instance_destination_dir = os.path.dirname(instance.save_as)
         relative_path = False
@@ -108,7 +121,7 @@ def parse_static_references(instance, text):
 
         detected_autostatic_paths[static_path_obj.destination] = static_path_obj.source
 
-        return static_path_obj.url
+        return html_escape(static_path_obj.url)
 
 
     def _parse_pelican_like_reference(m):
