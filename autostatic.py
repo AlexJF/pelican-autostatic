@@ -1,21 +1,14 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-from __future__ import unicode_literals, print_function
-
 import logging
 import os
 import re
 import shutil
 
 # For html escaping/unescaping
-import HTMLParser
-try:
-    from html import escape as html_escape  # py3
-except ImportError:
-    from cgi import escape as html_escape # py2
-
-import six
+import html.parser as HTMLParser
+from html import escape as html_escape
 
 from blinker import signal
 
@@ -133,7 +126,7 @@ def parse_static_references(instance, text):
     if text is None:
         return text
 
-    if isinstance(text, six.string_types):
+    if isinstance(text, str):
         settings = instance.settings
 
         static_ref_re_pattern = DEFAULT_STATIC_REF_PATTERN

@@ -1,4 +1,3 @@
-from os.path import abspath, dirname, join, normpath
 from setuptools import setup
 
 with open('README.rst') as f:
@@ -8,7 +7,7 @@ setup(
 
     # Basic package information:
     name = 'pelican-autostatic',
-    version = '0.2.2',
+    version = '1.0.0',
     py_modules = ('autostatic',),
 
     # Packaging options:
@@ -27,6 +26,5 @@ setup(
     keywords = 'pelican blog static generic automatic',
     description = ('A generator for Pelican allowing flexible referencing '
             'of static content'),
-    use_2to3 = True,
     long_description = long_description
 )

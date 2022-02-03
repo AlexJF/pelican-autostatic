@@ -1,3 +1,5 @@
+* 03/02/2022 - 1.0.0
+    * Remove support for Python 2.
 * 09/12/2014 - 0.2.2
 	* Fix autostatic inside markdown links/images when quotes are html-escaped.
 * 21/09/2014 - 0.2.1
