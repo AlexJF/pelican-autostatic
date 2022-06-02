@@ -7,8 +7,7 @@ import re
 import shutil
 
 # For html escaping/unescaping
-import html.parser as HTMLParser
-from html import escape as html_escape
+import html
 
 from blinker import signal
 
@@ -17,7 +16,6 @@ from pelican.contents import Static
 from pelican.utils import mkdir_p, get_relative_path
 
 logger = logging.getLogger(__name__)
-html_parser = HTMLParser.HTMLParser()
 
 autostatic_generator = None
 detected_autostatic_paths = {}
@@ -47,7 +45,7 @@ def html_unescape(text):
     if text is None:
         return text
 
-    return html_parser.unescape(text)
+    return html.unescape(text)
 
 
 def parse_static_references(instance, text):
@@ -122,7 +120,7 @@ def parse_static_references(instance, text):
 
         detected_autostatic_paths[static_path_obj.destination] = static_path_obj.source
 
-        return html_escape(static_path_obj.url)
+        return html.escape(static_path_obj.url)
 
     def _parse_pelican_like_reference(m):
         return "".join(
